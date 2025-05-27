@@ -1,0 +1,38 @@
+Okej, ovako
+
+Nas torent ce po onome sto smo se dogovarali sa Perom biti TRACKER SYSTEM. To znaci da postoji server koji pomaze peer-ovima da se medjusobno pronadju. Neki sistemi koriste DISTRIBUTED HASH TABLES(DHT) umesto servera da bi se lakse nasli(ja sam misljenja da je bolje da ne komplikujemo).
+
+PEER - jedan ucesnik u mrezi
+SWARM - grupa PEER-ova koji imaju kod sebe isti fajl
+
+Sada vezano za to cini mi se jako bitna stvar, ako zamislimo mapu(strukturu podataka) kljuc ce biti id FAJLA, a vrednost će biti lista(ili bilo koja druga slična struktura) id-jeva korisnika koji taj fajl imaju kod sebe.(Možda totalno grešim, treba proveriti)
+
+Fajlovi su podeljeni u PIECES koji su mali(recimo 512kb) delovi tog fajla. Kada neko želi da preuzme fajl preko torenta on traži SWARM koji ima taj fajl i preko hash vrednosti traži sve PIECES koji čine taj fajl(spominju se neki SHA-1 i SHA-256 nisam istražio to).
+
+Kada PEER-ovi biraju kome će da daju prioritet prilikom slanja podataka(npr više korisnika želi da preuzme isti film) prioritet se daje onim PEER-ovima koji najviše SEED-uju podataka(Choking and Unchoking).
+
+Može da se koristi i TCP i UDP protokol ali UDP se više koristi prilikom rada sa DHT-om tako da TCP deluje kao najrazumnija opcija.
+
+DODATNO ISTRAŽITI - PEERS šalju poruke poput interested, not interested, choke, unchoke, have, request, piece, ... i te poruke se moraju parsirati i onda dalje raditi nešto sa tim zahtevima. ISTRAŽITI ŠTA SU SVE PORUKE KOJE PEER MOŽE DA ŠALJE.
+
+ŠTA JE SVE POTREBNO
+- Torrent metadata parser(.torrent fajl)
+- Peer discovery(nalaženje SWARM-a putem TRACKER servera)
+- Downloader/Uploader logic (request/send pieces)
+- Validacija PIECE-a (Provera hash vrednosti)
+- File assembler (Da posloži te PIECES u pravilnom redosledu na disk)
+
+VAŽNO
+.torrent fajl izgleda ovako:
+{
+  "announce": "http://tracker.example.com/announce",
+  "info": {
+    "name": "filename.txt",
+    "length": 102400,
+    "piece length": 262144,
+    "pieces": "20-byte SHA-1 hashes concatenated"
+  }
+}
+Announce je URL do našeg TRACKER servera. Ovaj format u kom je pisan .torrent fajl je pisan u BENCODE(treba istražiti), dobra stvar je što u CPP-u postoji LIBTORRENT biblioteka koja sadrži bencode parser. Kada neko želi da preuzme nešto, on prvo pročita .torrent fajl, kontaktira TRACKER-a da dobije SWARM i onda direktno kontaktira njih i šalje request za preuzimanje fajla. 
+
+SVE SE SUŠTINSKI DEŠAVA NA BACK-u U CPP-u A FRONT JE SAMO ETO GUI BEZ NAROČITE FUNKCIONALNOSTI.

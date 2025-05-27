@@ -1,0 +1,11 @@
+Uputstvo za generisanje SSH ključa:
+1. Na github-u odete u Settings i sa desne strane ćete videti da piše nešto SSH, onda idete na new SSH key
+2. U terminalu kucate sledeće komande:
+ - ssh-keygen -t ed25519 -b 2048 -f ~/.ssh/github
+ - cd .ssh
+ - cat github.pub
+ Zatim će vam se ispisati javni ključ u terminalu pa ga kopirate u polje za ključ, videćete već
+ 
+ 
+ Nakon toga kada želite da klonirate repo samo:
+ git clone (ovde url koji se dobije kada na repou kliknete da kopirate SSH link)
