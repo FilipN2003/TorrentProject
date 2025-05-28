@@ -14,6 +14,7 @@ Ovo su komande za izmenu
 -git add .
 -git commint -m pa poruka u ""
 -git push origin pa naziv grane (master)
+-git pull origin pa naziv grane (master) - za dovlacenje izmena na nas racunar
 
 
 Uputstvo za pravljenje nove grane, mergovanje na main i brisanje grane nakon svega toga:
@@ -22,6 +23,7 @@ Uputstvo za pravljenje nove grane, mergovanje na main i brisanje grane nakon sve
 - Zatim nakon sto zavrsimo sa dodavanjem i izmenama mergujemo sa master granom:
 - Prvo se prebacimo na master granu, a zatim
 - git merge <branch-name>------------------------------------------------------------------------------------------------
-- git branch -d <branch-name>       # deletes local branch
-- git push origin --delete <branch-name>  # deletes remote branch
+- I na kraju brisemo granu lokalno i remote: (remote znaci da se brise sa sajta git narodski receno)
+- git branch -d <branch-name>       # deletes local branch---------------------------------------------------------------
+- git push origin --delete <branch-name>  # deletes remote branch--------------------------------------------------------
 
