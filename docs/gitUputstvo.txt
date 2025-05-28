@@ -9,3 +9,8 @@ Uputstvo za generisanje SSH ključa:
  
  Nakon toga kada želite da klonirate repo samo:
  git clone (ovde url koji se dobije kada na repou kliknete da kopirate SSH link)
+
+Ovo su komande za izmenu
+-git add .
+-git commint -m pa poruka u ""
+-git push origin pa naziv grane (master)
