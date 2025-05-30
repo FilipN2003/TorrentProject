@@ -1,0 +1,35 @@
+
+-Objasnjenje libtorrent-a
+
+-pokretanje:
+    - g++ -std=c++17 2.cpp -o 2 -ltorrent-rasterbar           kompajliranje
+    - ./2 ubuntu-25.04-desktop-amd64.iso.torrent         izvrsavanje
+    - moj fajl se zove 2.cpp
+
+
+-parsiranje i ucitavanje
+    - prvo koristimo namespace lt = libtorrent kao skracenicu
+    - .torrent fajl moramo da citamo kao binarnu formu a ne kao tekst jer zelimo da procitamo bas sve bez preskakanja (.torrent fajlovi, slike, videi itd se citaju ovako)
+    - procitano se smesta u neki vektor charova. Kljucne stvari su lt::span<const char>, lt::bdecode_node i lt::torrent_info
+    - lt::span<const char> span_buffer - je pogled na vektor u koji smo smestili ono sto smo procitali. To je dakle neki objekat koji samo "gleda" podatke iz buffera ali nije njegova kopija. U sustini nije toliko bitno, span se koristi za funkciju za koju ce biti reci u narednim redovima
+    - lt::bdecode_node node - ovde smestamo povratnu vrednost f-je bdecode kojoj prosledjujemo span odnosno pogled na onaj vektor i objekat koji sluzi za hvatanje gresaka... bdecode funkcija pretvara bajtove u hijerarhijsku stukturu slicnu json-u
+    - lt::torrent_info t_info - ovo je objekat koji kreiramo uz pomoc node-a (prethodni red) i objekta za hvatanje gresaka(ec), ovo je objekat koji sadrzi informacije tipa ime,velicinu fajla, broj delova,velicinu dela...
+    - lt::error_code ec - objekat za hvatanje gresaka
+
+    - Ukratko, citamo .torrent fajl u binarnoj formi, smestamo ga u neki vektor, parsiramo i na kraju dobijamo objekat cijim poljima mozemo da pristupamo da ih ispisujemo itd
+    - Ta polja su npr name(), total_size(), piece_length(), num_files(), info_hashes(), num_pieces()....
+
+
+-pokretanje sesije i dodavanje torenta
+    - lt::sesions ses - ovo je najvazniji objekat za ovaj projekat, njemu prosledjumo settings_pack objekat koji je na podrazumevanom modu (nisam istrazio kako se menja i sta tacno moze da se promeni)
+    - lt::add_torrent_parametars - ovo je objekat koji sadrzi informacije za pokretanje torrenta
+    - u polje atp.ti - smestano deljeni pokazivac na t_info objekat koji je zapravo ono sto smo parsirali
+    - u polje atp.save_path - dodeljujemo lokaciju gde zelimo da se skinuti fajl nadje npr . odnosno trenutni dir
+    - handle je objekat klase torrent_handle i njemu dodeljujemo ses.add_torrent(atp) odnosno torrent koji smo prethodno parsirali. Promenljiva handle se dalje koristi za kontrolu torenta, pauziranje...
+    - handle ima polja status, pause, resume ...
+
+
+    - u for petlji pristupamo statusu koji je polje objekta handle i ispisujemo zeljenje informacije, kada se torent skine, a to proveravamo sa status.is_seeding, izlazimo iz besk petlje i zavrsavamo program
+
+
+-dalje istrazujem pokretanje vise torrenta u isto vreme, pause, resume itd. Za sad je ovo samo kostur
