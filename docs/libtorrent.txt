@@ -3,7 +3,9 @@
 
 -pokretanje:
     - g++ -std=c++17 2.cpp -o 2 -ltorrent-rasterbar           kompajliranje
-    - ./2 ubuntu-25.04-desktop-amd64.iso.torrent         izvrsavanje
+    - ./1 ubuntu-25.04-desktop-amd64.iso.torrent
+    - ./2 ubuntu-25.04-desktop-amd64.iso.torrent ubuntu-24.04-desktop-amd64.iso.torrent     izvrsavanje
+    - link odakle sam skinuo ove .torrent fajlove    https://ubuntu.com/download/alternative-downloads
     - moj fajl se zove 2.cpp
 
 
@@ -32,4 +34,20 @@
     - u for petlji pristupamo statusu koji je polje objekta handle i ispisujemo zeljenje informacije, kada se torent skine, a to proveravamo sa status.is_seeding, izlazimo iz besk petlje i zavrsavamo program
 
 
--dalje istrazujem pokretanje vise torrenta u isto vreme, pause, resume itd. Za sad je ovo samo kostur
+-skidanje vise torenta odjednom
+    - u fajlu 2.cpp(samo preskocite ovo sto je zakomentarisano to je od ranije)
+    - Jednostavan koncept sa ovom bibliotekom. Kao argumente komandne linije mozemo da unosimo imena .torrent fajlova i pravimo vektor handle-ova(std::vector<lt::torrent_handle> handles).
+    - u petlji koja ide od 1 do argc(nulti indeks je ./a.out) radimo sve sto smo radili i ranije sa jednim .torrent fajlom. Citamo, pravimo buffer, span itd i na kraju dobijamo handle kome dodeljumo ses.add_torrent(atp) i taj handle pusujemo u vektor handles.
+    - kasnije imamo beskonacnu for petlju gde prolazimo sve handle-ove u vektoru handles i ispisujemo informacije uz pomoc statusa
+    - ovaj program koji sam otkucao je sekvencijalan ali se zapravo izvrsava paralelno i o tome se brine libtorrent biblioteka.
+
+
+-pauziranje
+    - u fajlu 1.cpp
+    - Imamo dve niti. Glavnu, u kojoj se skida torent fajl, i kreiramo novu nit, koja moze da pauzira i odpauzira skidanje i da prekine program.
+    - Pravimo funkciju koja nema povratnu vrednost i prima pokazivac na handle objekat. U ovoj funkciji se unosi p,r ili q za razlicite akcije
+    - koristimo atomic fleg da bismo mogli da mu pristupamo iz vise niti
+    - u mainu se prosledjuje nit koja prima funkciju koju smo napravili i referencu na handle objekat(bitno je da to bude bas taj handle koji obradjuje torent a ne kopija)
+    - funkcija koju izvrsava nit stalno radi dokle god exit_flag ne postane trenutni
+    - bitno je da imamo dve niti jer bi inace program cekao da mi unesemo neko slovo recimo p i ne bi mogao da nastavi sa skidanjem ovako program radi svoje, a mi istovremeno mozemo da unosimo komande tako sto ih samo otkucamo sa p enter npr
+    
