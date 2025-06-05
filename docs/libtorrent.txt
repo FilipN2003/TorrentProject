@@ -51,3 +51,22 @@
     - funkcija koju izvrsava nit stalno radi dokle god exit_flag ne postane trenutni
     - bitno je da imamo dve niti jer bi inace program cekao da mi unesemo neko slovo recimo p i ne bi mogao da nastavi sa skidanjem ovako program radi svoje, a mi istovremeno mozemo da unosimo komande tako sto ih samo otkucamo sa p enter npr
     
+-alertovi
+    - fajl 3.cpp
+    - nacin na koji razliciti dogadjaji iz sesije komuniciraju sa korisnikom. Svi alertovi nasledju lt::alert. Svi se cuvaju u lt::session.
+    - Korisnik poziva neku od metoda: pop_alerts() ili wait_for_alert()
+    - primeri:
+        - torrent_added_alert   torrent je dodat u sesiju
+        - torrent_removed_alert torrent je uklonjen
+        - torrent_finished_alert    torrent je zavrsen
+        - metadata_received_alert   Metadata(koristi se za magnet linkove) je preuzet
+        - piece_finished_alert  Deo fajla je skinuti
+        - block_finished_alert  Blok je skinut
+        - tracker_reply_alert   Tracker je odgovorio
+        - tracker_error_alert   Tracker je vratio gresku
+        - peer_connect_alert    Povezan je peer
+        - peer_disconnected_alert   Peer je diskonektovan
+        - liste_failed_alert    Nije uspeo bind na port
+        - file_error_alert  Neki fajl nije mogao da se otvori/zapise
+    - alertovi sluze da nas obavesto tacno kada se nesto desilo, bez da mi to zatrazimo rucno
+    - najbolje pogledajte 3.cpp da biste bolje skontali
