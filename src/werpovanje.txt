@@ -1,0 +1,22 @@
+U libtorrent-u, torrent je entitet koji:
+koncept:		objekat u kodu:				znacenje:
+.torrent fajl		libtorrent::torrent_info		Sadrži statične informacije: ime fajla, hash-eve, veličine, piece-ove
+Aktivni torrent		libtorrent::torrent_handle		Dinamični objekat koji prati stanje jednog torrenta u sesiji
+Dodavanje torenta	libtorrent::add_torrent_params		Paket sa info + lokacijom za preuzimanje + ostale parametre
+
+
+BIBLIOTEKA
+
+Biblioteka (TorrentWrapper.hpp/.cpp) je omotač oko biblioteke libtorrent. Cilj je da sačuva jasan, jednostavan interfejs koji ne zavisi od konkretne implementacije (libtorrent) i omogući laku zamenu libtorrent sa nekom drugom bibliotekom u budućnosti.
+
+TorrentWrapper je zapravo interfejs za rad sa .torrent fajlom, koji sadrži informacije kao što su ime torrenta, veličina, broj delova (pieces), itd.
+
+Šta predstavlja Impl?
+Impl je skraćeno od Implementation, i koristi se u tzv. Pimpl idiomu (Pointer to Implementation).
+To je dizajnerski obrazac kojim se skriva interna implementacija klase od korisnika zaglavlja (.hpp); smanjuje zavisnost (u ovom slučaju: libtorrent tipovi ostaju nevidljivi van .cpp); omogućava lakše menjanje implementacije bez menjanja javnog interfejsa.
+
+TorrentSession je glavni menadzer svih torenta u aplikaciji. On pokreće i upravlja celom sesijom (peer konekcije, komunikacija s trackerima); može dodati više torenta u jednu sesiju; cuva stanje: da li je torent pauziran, aktivan, koliko je preuzeto. TorrentSession je samo wrapper oko toga, koji pakuje i sakriva libtorrent API.
+
+
+TorrentHandle upraclja jednim konkretnim torentom. Omugucava da pauziranje / nastavak torrenta, proveriu statusa(procenti, brzina...), uklonjanje torenta, dobijenje detalja o njegovim fajlovima, hash-ovima.
+
