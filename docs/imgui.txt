@@ -30,32 +30,28 @@ Add ImGui source files to your project
 2
 Initialize ImGui context
 
-```bash
 IMGUI_CHECKVERSION();
 ImGui::CreateContext();
-```
+
 
 3
 Set up platform/renderer backends
 
-```bash
 
 // Example for Win32 + DirectX11
 ImGui_ImplWin32_Init(window);
 ImGui_ImplDX11_Init(device, context);
 
-```
+
 
 4
 Call frame functions in your main loop
 
-```bash
 
 ImGui_ImplDX11_NewFrame();
 ImGui_ImplWin32_NewFrame();
 ImGui::NewFrame();
 
-```
 
 Difficulty Factors
 The actual difficulty of integration varies based on your project's configuration:
