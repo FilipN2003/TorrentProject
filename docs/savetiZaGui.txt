@@ -1,0 +1,12 @@
+Ovo mi je napisao u produžetku odgovora za arhitekturu i mnogo mi se svidelo i mislim da će nam biti jako korisno u trenutku kada dođe do toga da integrišemo gui. Posebno ovaj View i Controller deo
+
+
+Considerations for the Future (GUI Integration)
+
+When you introduce a GUI:
+
+    GUI Framework: Choose one (Qt, GTKmm, wxWidgets, ImGui).
+    MVC/MVVM: Your current backend (TorrentManager, TorrentData) already forms a good "Model." You'll build a "View" (the GUI) and a "Controller" (which receives GUI events and translates them into calls to your TorrentManager).
+    Event Loop Integration: GUI frameworks have their own event loops. You'll need to integrate TorrentSessionHandler::poll_alerts() into the GUI's event loop (e.g., using a timer or a separate thread with appropriate synchronization).
+    Asynchronous Operations: Avoid blocking the GUI thread. All libtorrent operations are asynchronous, which fits well.
+    Callbacks/Signals & Slots: The TorrentManager can emit signals (or use callbacks) when a torrent's status changes, and the GUI can connect slots (or register callbacks) to these signals to update its display.

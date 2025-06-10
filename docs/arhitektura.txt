@@ -1,0 +1,132 @@
+Deo ovog teksta će biti na srpskom a deo na engleskom(sve što kopiram ostaje na engleskom)
+
+Ovo je nacrt arhitekture našeg projekta u objektno orjentisanom smislu. Za svaku klasu ove arhitekture Gemini(Googlova verzija ChatGPT-ja koja mi se mnogo sviđa u poslednje vreme, bacite pogled) mi je generisao i neku vrstu šturog koda na kom možemo da gradimo dalje. STAVIO BIH NA GLASANJE DA LI ŽELITE DA SE SLUŽIMO TIME PA DA I TO OKAČIM NA GIT KAO DOKUMENTACIJU.
+
+Naime, fajlsistem je zamišljen da izgleda ovako:
+
+your_torrent_client/
+├── CMakeLists.txt              # Na osnovu ovoga CMake generiše makefile i dovlači biblioteke
+├── README.md
+├── src/
+│   ├── main.cpp                # Ulazna tačka programa
+│   ├── torrent_manager.cpp
+│   ├── torrent_session_handler.cpp	#!!!! TORRENT WRAPPER MOŽE DA SE ADAPTIRA U OVO AKO SAM DOBRO RAZUMEO
+│   ├── torrent_info_parser.cpp
+│   ├── ui_printer.cpp          # Temporary text-based UI/logging
+│   └── util/			# Util mislim da nema toliku primenu kod nas, videćete u nastaku šta je to
+│       ├── file_system.cpp
+│       └── error_handler.cpp
+├── include/			#Samo zaglavlja fajlova iznad, e sad ja možda ovo ne bih razdvajao u dva foldera
+│   ├── torrent_manager.hpp
+│   ├── torrent_session_handler.hpp
+│   ├── torrent_info_parser.hpp
+│   ├── ui_printer.hpp
+│   └── util/
+│       ├── file_system.hpp
+│       └── error_handler.hpp
+├── build/                      # Generiše CMake
+└── bin/                        # Generiše CMake, binaries iliti izvršivi fajlovi
+
+Sada ćete videti šta mi je za svaku od ovih klasa napisano kao objašnjenje, a zatim i kako su one međusobno povezane
+
+1. main.cpp
+
+    Responsibility: Application entry point.
+
+    Role: Initializes the core components (e.g., TorrentSessionHandler, TorrentManager), starts the event loop, and handles graceful shutdown.
+    
+2. TorrentSessionHandler (and torrent_session_handler.hpp/.cpp)
+
+    Responsibility: Manages the libtorrent::session object. This is your direct interface with the libtorrent library.
+    Role:
+        Initializes and shuts down the libtorrent::session.
+        Adds/removes libtorrent::add_torrent_params to the session.
+        Polls for libtorrent::alert messages and dispatches them.
+        Configures session settings (ports, limits, DHT, UPnP, etc.).
+    Key Data Members: libtorrent::session object.
+    Key Methods:
+        init(): Initializes the session.
+        shutdown(): Shuts down the session.
+        add_torrent(add_torrent_params& params): Adds a torrent to the session.
+        remove_torrent(torrent_handle& handle): Removes a torrent.
+        poll_alerts(): Retrieves alerts and processes them (e.g., calling callback functions or internal handlers).
+        post_torrent_updates(): Periodically requests updates for torrent status.
+        configure_settings(settings_pack& settings): Apply custom settings.
+
+3. TorrentManager (and torrent_manager.hpp/.cpp)
+
+    Responsibility: Manages the lifecycle and state of individual torrents from the application's perspective. It acts as an intermediary between the UI (or main loop) and TorrentSessionHandler.
+    Role:
+        Keeps track of all active torrents (e.g., in a std::map<info_hash, TorrentData>).
+        Provides methods to add torrents (from .torrent files, magnet links).
+        Handles libtorrent alerts, updating the internal state of torrents.
+        Provides status information for each torrent.
+        Handles torrent-specific actions (start, pause, stop, remove).
+    Key Data Members:
+        TorrentSessionHandler& session_handler: Reference to the session handler.
+        std::map<libtorrent::torrent_handle, TorrentData>: A map to store active torrents. TorrentData would be a custom struct/class (see below).
+        UIPrinter& ui_printer: For logging/display.
+    Key Methods:
+        add_torrent_from_file(const std::string& torrent_file_path, const std::string& save_path)
+        add_torrent_from_magnet(const std::string& magnet_link, const std::string& save_path)
+        start_torrent(const libtorrent::torrent_handle& handle)
+        pause_torrent(const libtorrent::torrent_handle& handle)
+        remove_torrent(const libtorrent::torrent_handle& handle, bool delete_files = false)
+        get_torrent_status(const libtorrent::torrent_handle& handle) const: Returns a TorrentStatus object.
+        handle_alert(libtorrent::alert* a): A central alert handler that dispatches alerts to specific internal methods (e.g., on_state_changed_alert, on_torrent_finished_alert).
+        update_torrent_states(): Iterates through active torrents and fetches their latest status, useful for periodic UI updates.
+
+4. TorrentData (and torrent_data.hpp)
+
+    Responsibility: Represents the application's view of a single torrent.
+    Role: Stores relevant information about a torrent that you want to display or track. This is your data, not necessarily directly matching libtorrent's internal structures.
+    Key Data Members:
+        libtorrent::torrent_handle handle: The libtorrent handle for this torrent.
+        std::string name: Torrent name.
+        std::string save_path: Where files are saved.
+        int progress_percentage: Current download progress.
+        int download_speed_kbps: Current download speed.
+        int upload_speed_kbps: Current upload speed.
+        int num_peers: Number of connected peers.
+        std::string status_message: E.g., "Downloading," "Seeding," "Paused," "Error."
+        libtorrent::torrent_status last_status: Store the last libtorrent::torrent_status object for detailed info.
+        Other flags (e.g., is_paused, is_finished).
+
+5. TorrentInfoParser (and torrent_info_parser.hpp/.cpp)
+
+    Responsibility: Handles parsing .torrent files and magnet links into libtorrent::add_torrent_params.
+    Role: Decouples the logic of file parsing from the session management.
+    Key Methods:
+        parse_torrent_file(const std::string& file_path, const std::string& save_path): Returns a libtorrent::add_torrent_params.
+        parse_magnet_link(const std::string& magnet_link, const std::string& save_path): Returns a libtorrent::add_torrent_params.
+
+6. UIPrinter (and ui_printer.hpp/.cpp)
+
+    Responsibility: Handles printing information to the console.
+    Role: Provides a simple, temporary interface for outputting messages, progress, and errors. This class will be replaced/interfaced with your GUI layer later.
+    Key Methods:
+        print_message(const std::string& msg)
+        print_error(const std::string& error_msg)
+        update_torrent_display(const TorrentStatus& status) (Conceptual, for more detailed updates)
+
+7. Util Namespace/Directory (and util/ files)
+
+    Responsibility: Contains general utility functions that don't belong to specific torrent logic.
+    Role: Promotes reusability and keeps core classes focused.
+    Example Files:
+        file_system.hpp/.cpp: For cross-platform file operations (checking existence, creating directories, etc.).
+        error_handler.hpp/.cpp: For centralized error logging or handling.
+        string_utils.hpp/.cpp: For string manipulation (e.g., converting bytes to human-readable format).
+        
+Sada ide deo o tome kako su međusobno povezane ove klase:
+
+How These Classes Interact
+
+   1. main.cpp initializes TorrentSessionHandler and TorrentManager.
+   2. TorrentManager is passed a reference to TorrentSessionHandler so it can interact with the libtorrent session.
+   3. When a user wants to add a torrent (e.g., via main or a future GUI), TorrentManager uses TorrentInfoParser to create add_torrent_params.
+   4. TorrentManager then calls TorrentSessionHandler::add_torrent() to add it to the libtorrent session.
+   5. TorrentSessionHandler constantly polls for alerts. When an alert arrives, it passes it to TorrentManager::handle_alert().
+   6. TorrentManager::handle_alert() processes the alert, updating the relevant TorrentData object's state.
+   7. main.cpp (or the GUI's event loop) periodically calls TorrentManager::update_torrent_states() to refresh the displayed information, which in turn might fetch TorrentData objects and pass them to UIPrinter.
+   
