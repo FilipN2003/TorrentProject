@@ -31,11 +31,10 @@ Add ImGui source files to your project
 Initialize ImGui context
 
 ```bash
-
 IMGUI_CHECKVERSION();
 ImGui::CreateContext();
-
 ```
+
 3
 Set up platform/renderer backends
 
