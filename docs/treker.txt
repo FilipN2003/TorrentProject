@@ -74,8 +74,6 @@ udp://opentracker.i2p.rocks:6969/announce
 2
 Configure your client
 
-```bash
-
 class TorrentConfig:
     def __init__(self):
         # Define tracker list
@@ -94,13 +92,9 @@ class TorrentConfig:
         if tracker_url not in self.trackers:
             self.trackers.append(tracker_url)
 
-```
-
 
 Verification Methods
 Tracker Status Check
-
-```bash
 
 def verify_tracker_status(url):
     import requests
@@ -111,12 +105,10 @@ def verify_tracker_status(url):
     except requests.RequestException:
         return False
 
-```
+
 
 Connection Testing
 
-
-```bash
 
 def test_tracker_connection(tracker_url):
     """Test basic connectivity to tracker"""
@@ -132,7 +124,6 @@ def test_tracker_connection(tracker_url):
     finally:
         sock.close()
 
-```
 Important Considerations
 
 Tracker Health Monitoring
