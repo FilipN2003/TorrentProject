@@ -5,27 +5,25 @@ Ovo je nacrt arhitekture našeg projekta u objektno orjentisanom smislu. Za svak
 Naime, fajlsistem je zamišljen da izgleda ovako:
 
 your_torrent_client/
-├── CMakeLists.txt              # Na osnovu ovoga CMake generiše makefile i dovlači biblioteke
-├── README.md
+├── CMakeLists.txt
 ├── src/
-│   ├── main.cpp                # Ulazna tačka programa
-│   ├── torrent_manager.cpp
-│   ├── torrent_session_handler.cpp	#!!!! TORRENT WRAPPER MOŽE DA SE ADAPTIRA U OVO AKO SAM DOBRO RAZUMEO
-│   ├── torrent_info_parser.cpp
-│   ├── ui_printer.cpp          # Temporary text-based UI/logging
-│   └── util/			# Util mislim da nema toliku primenu kod nas, videćete u nastaku šta je to
-│       ├── file_system.cpp
-│       └── error_handler.cpp
-├── include/			#Samo zaglavlja fajlova iznad, e sad ja možda ovo ne bih razdvajao u dva foldera
-│   ├── torrent_manager.hpp
-│   ├── torrent_session_handler.hpp
-│   ├── torrent_info_parser.hpp
-│   ├── ui_printer.hpp
+│   ├── main.cpp
+│   ├── torrent_engine.cpp          # NEW: Consolidates functionality
+│   ├── torrent_info_parser.cpp     # Remains
+│   ├── ui_printer.cpp              # Remains
+│   ├── torrent_data.cpp            # Remains
 │   └── util/
-│       ├── file_system.hpp
-│       └── error_handler.hpp
-├── build/                      # Generiše CMake
-└── bin/                        # Generiše CMake, binaries iliti izvršivi fajlovi
+│       ├── file_system.cpp         # Remains
+│       └── error_handler.cpp       # Remains
+├── include/
+│   ├── torrent_engine.hpp          # NEW
+│   ├── torrent_info_parser.hpp     # Remains
+│   ├── ui_printer.hpp              # Remains
+│   ├── torrent_data.hpp            # Remains
+│   └── util/
+│       ├── file_system.hpp         # Remains
+│       └── error_handler.hpp       # Remains
+└── build/
 
 Sada ćete videti šta mi je za svaku od ovih klasa napisano kao objašnjenje, a zatim i kako su one međusobno povezane
 
