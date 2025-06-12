@@ -1,0 +1,115 @@
+#ifndef TORRENT_INFO_PARSER_HPP
+#define TORRENT_INFO_PARSER_HPP
+
+#include <string>
+#include <libtorrent/add_torrent_params.hpp>
+#include <libtorrent/torrent_info.hpp>
+#include <optional> // C++17 for optional return values
+
+class UIPrinter; // Forward declaration
+
+class TorrentInfoParser {
+public:
+    TorrentInfoParser(UIPrinter& printer);
+
+    // Parses a .torrent file and returns add_torrent_params
+    std::optional<libtorrent::add_torrent_params>
+    parse_torrent_file(const std::string& torrent_file_path, const std::string& save_path);
+
+    // Parses a magnet link and returns add_torrent_params
+    std::optional<libtorrent::add_torrent_params>
+    parse_magnet_link(const std::string& magnet_link, const std::string& save_path);
+
+private:
+    UIPrinter& ui_printer_;
+};
+
+#endif // TORRENT_INFO_PARSER_HPP
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include "torrent_info_parser.hpp"
+#include "ui_printer.hpp"
+#include "util/error_handler.hpp"
+#include "util/file_system.hpp"
+
+#include <libtorrent/magnet_uri.hpp>
+#include <libtorrent/read_torrent.hpp>
+#include <libtorrent/bencode.hpp> // for bdecode
+#include <fstream>
+#include <streambuf> // For reading file into string
+
+namespace lt = libtorrent;
+
+TorrentInfoParser::TorrentInfoParser(UIPrinter& printer)
+    : ui_printer_(printer) {}
+
+std::optional<lt::add_torrent_params>
+TorrentInfoParser::parse_torrent_file(const std::string& torrent_file_path, const std::string& save_path) {
+    if (!Util::FileSystem::create_directory_if_not_exists(save_path)) {
+        ui_printer_.print_error("Failed to create save directory: " + save_path);
+        return std::nullopt;
+    }
+
+    std::ifstream file(torrent_file_path, std::ios::binary);
+    if (!file) {
+        ui_printer_.print_error("Failed to open .torrent file: " + torrent_file_path);
+        return std::nullopt;
+    }
+
+    // Read the file into a buffer
+    file.seekg(0, std::ios::end);
+    std::vector<char> buffer(file.tellg());
+    file.seekg(0, std::ios::beg);
+    file.read(buffer.data(), buffer.size());
+    file.close();
+
+    lt::error_code ec;
+    lt::torrent_info t_info(buffer, ec);
+
+    if (ec) {
+        ui_printer_.print_error("Failed to parse .torrent file: " + ec.message());
+        return std::nullopt;
+    }
+
+    lt::add_torrent_params p;
+    p.ti = t_info; // Set the torrent_info object
+    p.save_path = save_path;
+    p.name = t_info.name(); // Set name from torrent info
+    p.flags |= lt::torrent_flags::auto_managed | lt::torrent_flags::paused; // Start paused for now, you can unpause later
+
+    ui_printer_.print_message("Parsed .torrent file: " + t_info.name());
+    return p;
+}
+
+std::optional<lt::add_torrent_params>
+TorrentInfoParser::parse_magnet_link(const std::string& magnet_link, const std::string& save_path) {
+    if (!Util::FileSystem::create_directory_if_not_exists(save_path)) {
+        ui_printer_.print_error("Failed to create save directory: " + save_path);
+        return std::nullopt;
+    }
+
+    lt::error_code ec;
+    lt::add_torrent_params p = lt::parse_magnet_uri(magnet_link, ec);
+
+    if (ec) {
+        ui_printer_.print_error("Failed to parse magnet link: " + ec.message());
+        return std::nullopt;
+    }
+
+    p.save_path = save_path;
+    p.flags |= lt::torrent_flags::auto_managed | lt::torrent_flags::paused; // Start paused, let it download metadata first
+
+    ui_printer_.print_message("Parsed magnet link for info hash: " + lt::to_hex(p.info_hash.bytes));
+    return p;
+}
