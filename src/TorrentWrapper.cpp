@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 #include <stdexcept>
+#include <iomanip>
 
 namespace torrent {
 
@@ -31,7 +32,9 @@ TorrentWrapper::TorrentWrapper(const std::string& filepath)
 
     libtorrent::error_code ec;
     libtorrent::bdecode_node node;
-    libtorrent::bdecode(buffer, node, ec);
+    libtorrent::span<const char> data_span(buffer.data(), buffer.size());
+    node = libtorrent::bdecode(data_span, ec);
+
     if (ec) {
         throw std::runtime_error("Greska pri bdecode: " + ec.message());
     }
@@ -43,6 +46,11 @@ TorrentWrapper::TorrentWrapper(const std::string& filepath)
 }
 
 TorrentWrapper::~TorrentWrapper() = default;
+
+std::shared_ptr<void> TorrentWrapper::info() const {
+    return impl_->t_info;
+}
+
 
 std::string TorrentWrapper::name() const { return impl_->t_info->name(); }
 size_t TorrentWrapper::totalSize() const { return impl_->t_info->total_size(); }
@@ -58,6 +66,8 @@ public:
     Impl() = default;   //podrazumevani konstruktor
 };
 
+TorrentHandle::~TorrentHandle() = default;
+
 void TorrentHandle::pause() {
     if (impl_) impl_->handle.pause();
 }
@@ -67,7 +77,8 @@ void TorrentHandle::resume() {
 }
 
 bool TorrentHandle::isPaused() const {
-    if (impl_) return impl_->handle.status().paused;
+    if (impl_) return impl_->handle.status().flags & libtorrent::torrent_flags::paused
+;
     return false;
 }
 
@@ -105,8 +116,9 @@ std::vector<std::string> TorrentHandle::fileNames() const {
     std::vector<std::string> files;
     if (!impl_) return files;
     auto info = impl_->handle.torrent_file();
-    for (auto const& f : info->files()) {
-        files.emplace_back(f.path);
+    auto const& storage = info->files();
+    for (int i = 0; i < storage.num_files(); ++i) {
+        files.emplace_back(storage.file_path(i));
     }
     return files;
 }
@@ -144,6 +156,8 @@ public:
     }
 };
 
+TorrentSession::~TorrentSession() = default;
+
 TorrentSession::TorrentSession()
     : impl_(std::make_unique<Impl>()) {
     libtorrent::settings_pack pack;
@@ -153,7 +167,8 @@ TorrentSession::TorrentSession()
 
 std::shared_ptr<TorrentHandle> TorrentSession::addTorrent(const TorrentWrapper& wrapper, const std::string& save_path) {
     libtorrent::add_torrent_params atp;
-    atp.ti = wrapper.impl_->t_info;
+    // zbog void u implenetaciji fje info(), koristimo ceo potpis
+    atp.ti = std::static_pointer_cast<libtorrent::torrent_info>(wrapper.info());
     atp.save_path = save_path;
 
     auto handle = impl_->session.add_torrent(std::move(atp));
@@ -174,4 +189,3 @@ TorrentStatus TorrentSession::getStatus(const std::shared_ptr<TorrentHandle>& ha
 }
 
 }
-
