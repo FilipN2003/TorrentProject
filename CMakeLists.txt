@@ -33,6 +33,41 @@ include_directories(vendor/imgui vendor/imgui/backends)
 # --- End ImGui Integration ---
 
 
+# --- Libtorrent-Rasterbar Integration ---
+# Libtorrent-Rasterbar depends on Boost and OpenSSL.
+# It's good practice to find these explicitly before libtorrent itself.
+
+# Find Boost libraries
+# libtorrent-rasterbar commonly uses system, thread, date_time, and chrono components.
+find_package(Boost 1.67 COMPONENTS system thread date_time chrono REQUIRED) # Adjust version as needed
+if (Boost_FOUND)
+    message(STATUS "Found Boost: ${Boost_LIBRARIES}")
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Boost library not found. Please install Boost development files (e.g., libboost-dev).")
+endif()
+
+# Find OpenSSL
+find_package(OpenSSL REQUIRED)
+if (OPENSSL_FOUND)
+    message(STATUS "Found OpenSSL: ${OPENSSL_LIBRARIES}")
+    include_directories(${OPENSSL_INCLUDE_DIR})
+else()
+    message(FATAL_ERROR "OpenSSL not found. Please install OpenSSL development files (e.g., libssl-dev).")
+endif()
+
+# Find Libtorrent-Rasterbar itself
+# It typically installs a Config.cmake file, so find_package should work.
+find_package(LibtorrentRasterbar REQUIRED)
+if (LibtorrentRasterbar_FOUND)
+    message(STATUS "Found Libtorrent-Rasterbar: ${LibtorrentRasterbar_LIBRARIES}")
+    include_directories(${LibtorrentRasterbar_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Libtorrent-Rasterbar not found. Please install libtorrent-rasterbar-dev.")
+endif()
+# --- End Libtorrent-Rasterbar Integration ---
+
+
 # Define all your application's source files
 # Add all your .cpp files from src/ here
 # List headers from inc/ for dependency tracking if you want, but they are not compiled directly
@@ -42,7 +77,8 @@ set(APP_SOURCES
     # Add other .cpp files from your src/ folder here, e.g.:
     # src/TorrentClient.cpp
     # src/Tracker.cpp
-    # inc/TorrentClient.hpp # You can list headers too
+    # src/YourLibtorrentUsage.cpp # Example file where you'd use libtorrent
+    # inc/TorrentClient.hpp
     # inc/Tracker.hpp
 )
 
@@ -55,10 +91,14 @@ add_executable(${PROJECT_NAME} # Uses the project name "TorrentProject" for the 
 )
 
 # Link necessary libraries
+# Order can sometimes matter, typically more dependent libraries first.
 target_link_libraries(${PROJECT_NAME}
     glfw
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}
+    ${LibtorrentRasterbar_LIBRARIES} # Link libtorrent-rasterbar
+    ${Boost_LIBRARIES}               # Link Boost components
+    ${OPENSSL_LIBRARIES}             # Link OpenSSL
 )
 
 # Optional: Set properties for macOS bundles (if needed for deployment)
