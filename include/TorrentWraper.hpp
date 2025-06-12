@@ -3,6 +3,8 @@
 
 #include <string>
 #include <memory>
+#include <vector>
+#include <iomanip>
 
 namespace torrent {
 
@@ -19,17 +21,20 @@ public:
     int numPieces() const;
     int pieceLength() const;
     int numFiles() const;
-
+    
+    std::shared_ptr<void> info() const;
+    
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
+    
 };
 
 // Implementacija klase za upravljanje torrent sesijom
 class TorrentSession {
 public:
     TorrentSession();
-    ~TorrentSession() = default;
+    ~TorrentSession();
 
     std::shared_ptr<TorrentHandle> addTorrent(const TorrentWrapper& wrapper, const std::string& save_path = ".");
     
@@ -53,7 +58,7 @@ struct TorrentStatus {
 
 class TorrentHandle {
 public:
-    ~TorrentHandle() = default;
+    ~TorrentHandle();
 
     // Upravljanje preuzimanjem
     void pause();
@@ -81,4 +86,5 @@ private:
 }
 
 #endif
+
 
