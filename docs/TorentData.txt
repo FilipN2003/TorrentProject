@@ -1,0 +1,135 @@
+#ifndef TORRENT_DATA_HPP
+#define TORRENT_DATA_HPP
+
+#include <string>
+#include <libtorrent/torrent_handle.hpp>
+#include <libtorrent/torrent_status.hpp>
+#include <vector>
+
+// This struct holds the information about a torrent that your application cares about.
+// It's a simplified view of libtorrent::torrent_status.
+struct TorrentData {
+    libtorrent::torrent_handle handle; // The libtorrent handle to interact with the torrent
+    std::string info_hash_str;         // String representation of info_hash for easy lookup/display
+
+    std::string name;
+    std::string save_path;
+    long long total_size;              // Total size in bytes
+    long long downloaded_bytes;
+    long long uploaded_bytes;
+    int progress_percentage;           // 0-100
+    int download_speed_kbps;           // Bytes/second converted to KB/s for display
+    int upload_speed_kbps;             // Bytes/second converted to KB/s for display
+    int num_peers;                     // Connected peers
+    std::string status_message;        // E.g., "Downloading", "Seeding", "Paused", "Error"
+    bool is_paused;
+    bool is_finished;
+    bool has_metadata;                 // For magnet links
+    bool is_error;
+    std::string error_message;
+
+    // Last known libtorrent status (can be useful for detailed debugging)
+    libtorrent::torrent_status last_lt_status;
+
+    TorrentData() :
+        total_size(0), downloaded_bytes(0), uploaded_bytes(0),
+        progress_percentage(0), download_speed_kbps(0), upload_speed_kbps(0),
+        num_peers(0), is_paused(false), is_finished(false), has_metadata(false),
+        is_error(false) {}
+
+    // Method to update this struct from a libtorrent::torrent_status
+    void update_from_status(const libtorrent::torrent_status& s);
+};
+
+#endif // TORRENT_DATA_HPP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include "torrent_data.hpp"
+#include <libtorrent/hex.hpp> // For to_hex
+
+void TorrentData::update_from_status(const libtorrent::torrent_status& s) {
+    handle = s.handle;
+    name = s.name;
+    save_path = s.save_path;
+    is_paused = s.paused;
+    is_finished = s.is_finished;
+    has_metadata = s.has_metadata;
+    is_error = (s.errc != lt::error_code{}); // Check if there's an error code
+    error_message = s.errc.message();
+
+    if (s.has_metadata) {
+        total_size = s.total_download; // This is actually total downloaded, not total size of torrent
+                                       // For total size of torrent, you need s.torrent_file->total_size()
+                                       // but that's only available *after* metadata has been downloaded
+                                       // and torrent_file is valid.
+        if (s.torrent_file) {
+            total_size = s.torrent_file->total_size();
+        } else {
+             total_size = 0; // Or indicate 'unknown'
+        }
+
+        downloaded_bytes = s.total_done; // This is the actual amount downloaded
+        uploaded_bytes = s.total_upload;
+        progress_percentage = static_cast<int>(s.progress * 100);
+        download_speed_kbps = static_cast<int>(s.download_rate / 1024);
+        upload_speed_kbps = static_cast<int>(s.upload_rate / 1024);
+        num_peers = s.num_peers;
+
+        // Determine status message
+        if (s.errc) {
+            status_message = "Error: " + s.errc.message();
+        } else if (s.paused) {
+            status_message = "Paused";
+        } else if (s.is_seeding) {
+            status_message = "Seeding";
+        } else if (s.is_finished) {
+            status_message = "Finished";
+        } else if (s.state == libtorrent::torrent_status::state_t::checking_files) {
+            status_message = "Checking files";
+        } else if (s.state == libtorrent::torrent_status::state_t::downloading_metadata) {
+            status_message = "Downloading metadata";
+        } else if (s.state == libtorrent::torrent_status::state_t::downloading) {
+            status_message = "Downloading";
+        } else if (s.state == libtorrent::torrent_status::state_t::checking_resume_data) {
+             status_message = "Checking resume data";
+        } else {
+            status_message = "Unknown";
+        }
+    } else {
+        // For magnet links before metadata is downloaded
+        status_message = "Downloading metadata...";
+        total_size = 0;
+        downloaded_bytes = 0;
+        uploaded_bytes = 0;
+        progress_percentage = 0;
+        download_speed_kbps = 0;
+        upload_speed_kbps = 0;
+        num_peers = s.num_peers; // Still relevant for magnet
+    }
+
+
+    last_lt_status = s; // Store the full status for debugging/more detailed info
+    info_hash_str = lt::to_hex(s.info_hash.bytes);
+}
