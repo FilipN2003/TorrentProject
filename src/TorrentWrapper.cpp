@@ -96,7 +96,7 @@ void TorrentHandle::remove(bool deleteFiles) {
     if (!impl_) return;
     // Uklanjanje preko alert sistema bi bilo idealno, ali ovde koristimo direktnu metodu
     // Korisnik bi trebalo da osigura da session zivi dovoljno dugo
-    impl_->handle.auto_managed(false); // sprečava automatsko ponovno dodavanje
+    impl_->handle.unset_flags(libtorrent::torrent_flags::auto_managed); // sprečava automatsko ponovno dodavanje
     impl_->handle.pause();
     impl_->handle.clear_error();
     // Napomena: remove se obično poziva preko session-a, ovde možemo samo "pripremiti" torrent
@@ -143,6 +143,8 @@ class TorrentSession::Impl {
 public:
     libtorrent::session session;
 
+    Impl() : session(libtorrent::settings_pack()) {}  // direktna inicijalizacija
+
     // Funkcija za čitanje alerta iz sesije
     std::vector<libtorrent::alert*> pop_alerts() {
         std::vector<libtorrent::alert*> alerts;
@@ -160,8 +162,8 @@ TorrentSession::~TorrentSession() = default;
 
 TorrentSession::TorrentSession()
     : impl_(std::make_unique<Impl>()) {
-    libtorrent::settings_pack pack;
-    impl_->session = libtorrent::session(pack);
+//   libtorrent::settings_pack pack;
+//    impl_->session = libtorrent::session(pack);
 }
 
 
