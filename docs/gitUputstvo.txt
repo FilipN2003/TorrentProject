@@ -27,3 +27,74 @@ Uputstvo za pravljenje nove grane, mergovanje na main i brisanje grane nakon sve
 - git branch -d <branch-name>       # deletes local branch---------------------------------------------------------------
 - git push origin --delete <branch-name>  # deletes remote branch--------------------------------------------------------
 
+
+
+PRAVLJENJE I SPAJANJE GRANA 
+
+1. Pravljenje nove grane:
+
+    1. Ažuriraj lokalni main (ili master):
+      git checkout main        # Prebaci se na main granu
+      git pull origin main     # Preuzmi najnovije promene sa servera
+
+    2.Kreiraj i prebaci se na novu granu:
+      git branch ime_tvoje_grane (kreira granu)
+      git checkout ime_tvoje_grane (prebacuje se na nju)
+
+2. Rad na tvojoj grani
+
+    1. Pravi promene u kodu.
+    2. Dodaj promene za commit:
+         git add .                  # Dodaje sve izmenjene fajlove
+         # ILI
+         git add putanja/do/fajla   # Dodaje specifičan fajl
+
+    3. Commit-uj promene:
+         git commit -m "Opis tvog commita - šta si radio/la"
+
+    4. Gurni promene na udaljeni repozitorijum:
+         git push
+
+3. Spajanje grana (Merge)
+  Preporučeni proces (sa Pull Requestom):
+    1. Ažuriraj svoju granu sa main granom (preporučeno pre PR-a):
+        git checkout ime_tvoje_grane  # Proveri da si na svojoj grani
+        git pull origin main          # Povuci promene sa main grane u svoju granu (ovo je merge)
+        # Ako dođe do konflikta, reši ih sada.
+        git add .                     # Dodaj rešene konflikte
+        git commit -m "Merge main into ime_tvoje_grane" # Commit-uj rešenje konflikata
+        git push                      # Gurni ažuriranu granu na server
+
+   2. Kreiraj Pull Request (na GitHubu/GitLabu/Bitbuckettu):
+      Idi na web interfejs svog Git repozitorijuma.
+      Videćeš opciju "New Pull Request" ili "New Merge Request".
+      Izaberi svoju granu (ime_tvoje_grane) kao "source" (ili "compare") i main granu kao "destination" (ili "base").
+      Napiši opis PR-a, objasni šta si radio/la i zatraži code review od članova tima.
+      Tim pregleda tvoj kod, daje komentare i predloge.
+
+  3. Rešavanje konflikata u Pull Requestu (ako ih ima):
+     Ako u međuvremenu neko drugi spoji promene u main granu koje se preklapaju sa tvojim, doći će do konflikata.
+
+     Git će te obavestiti o konfliktima u PR-u.
+     Moraćeš da se vratiš na svoju lokalnu granu (git checkout ime_tvoje_grane), ponovo pokušaš git pull origin main (ili git rebase origin main), ručno rešiš konflikte u fajlovima (videćeš markere <<<<<<<, =======, >>>>>>>), commit-uješ rešene konflikte i ponovo gurneš (git push).
+     PR će se automatski ažurirati.
+
+  4. Spajanje Pull Requesta:
+   Kada su svi problemi rešeni i tim odobri promene, neko (obično maintainer projekta) će kliknuti na dugme "Merge Pull Request" na web interfejsu. Ovo će automatski spojiti tvoje promene u main granu.
+   Obriši svoju granu (opciono, ali preporučljivo):
+   Nakon što je tvoja grana uspešno spojena u main, obično je više ne trebaš. Možeš je obrisati i sa udaljenog repozitorijuma i lokalno.
+
+
+Sažetak toka rada:
+
+   1. git checkout main
+   2. git pull origin main
+   3. git checkout -b ime_tvoje_grane
+   4. Radi, radi, radi...
+   5. git add .
+   6. git commit -m "Opis posla"
+   7. git push -u origin ime_tvoje_grane
+   8. Kad si pri kraju: git pull origin main (reši konflikte ako ih ima, pa commituj i pushuj)
+   9. Kreiraj Pull Request na GitHubu/GitLabu.
+   10. Nakon odobrenja, Merge Pull Request.
+   11. Obriši granu lokalno i sa servera.
