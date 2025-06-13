@@ -191,3 +191,4 @@ TorrentStatus TorrentSession::getStatus(const std::shared_ptr<TorrentHandle>& ha
 }
 
 }
+
