@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(TorrentProject CXX) # Project name remains TorrentProject
 
+cmake_policy(SET CMP0072 NEW)
+set(OpenGL_GL_PREFERENCE "GLVND")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -39,7 +42,7 @@ include_directories(vendor/imgui vendor/imgui/backends)
 
 # Find Boost libraries
 # libtorrent-rasterbar commonly uses system, thread, date_time, and chrono components.
-find_package(Boost 1.67 COMPONENTS system thread date_time chrono REQUIRED) # Adjust version as needed
+find_package(Boost COMPONENTS system thread date_time chrono REQUIRED) # Adjust version as needed
 if (Boost_FOUND)
     message(STATUS "Found Boost: ${Boost_LIBRARIES}")
     include_directories(${Boost_INCLUDE_DIRS})
