@@ -10,3 +10,41 @@ When you introduce a GUI:
     Event Loop Integration: GUI frameworks have their own event loops. You'll need to integrate TorrentSessionHandler::poll_alerts() into the GUI's event loop (e.g., using a timer or a separate thread with appropriate synchronization).
     Asynchronous Operations: Avoid blocking the GUI thread. All libtorrent operations are asynchronous, which fits well.
     Callbacks/Signals & Slots: The TorrentManager can emit signals (or use callbacks) when a torrent's status changes, and the GUI can connect slots (or register callbacks) to these signals to update its display.
+
+
+How They Work Together (OpenGL and GLFW)
+
+1. Window Creation
+    GLFW creates the window and handles OS interactions
+    OpenGL uses this window for rendering
+
+2. Event Processing
+    GLFW captures keyboard/mouse events
+    Your application processes these events
+    OpenGL responds to event-driven updates
+
+3. Context Management
+    GLFW creates and manages the OpenGL context
+    Ensures proper initialization and cleanup
+
+Best Practices When Using Together
+    Initialize GLFW first to create window/context
+    Load OpenGL functions using GLAD
+    Handle events through GLFW callbacks
+    Perform rendering operations with OpenGL
+    Clean up both frameworks properly on exit
+
+
+
+GLAD (OpenGL Loader Generator) serves as a crucial middleware component that bridges the gap between your application and OpenGL by managing function loading and extension support.
+
+Why GLAD Is Essential
+Without GLAD, developers would need to:
+
+Manually load hundreds of OpenGL functions
+Write complex extension detection code
+Handle version compatibility manually
+Manage function pointer initialization
+
+As mentioned in our previous discussion about OpenGL and GLFW, GLAD simplifies the process of getting started with modern OpenGL development by eliminating the tedious and error-prone task of function loading.
+By using GLAD, developers can focus on writing graphics code rather than managing low-level details, making it an essential tool for modern OpenGL development.
